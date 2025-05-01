@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - master
+    - "*"
     tags-ignore:
     - "*"
 
@@ -14,7 +14,6 @@ env:
 jobs:
   build:
 
-    if: github.repository == 'mikf/gallery-dl'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -80,28 +79,3 @@ jobs:
         path: dist/*
         retention-days: 1
         compression-level: 0
-
-  release:
-
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/download-artifact@v4
-
-    - name: Environment Variables
-      run: echo "DATE=$(date '+${{ env.DATE_FORMAT }}')" >> "$GITHUB_ENV"
-
-    - name: Body
-      run: printf 'https://github.com/%s/commit/%s' '${{ github.repository }}' '${{ github.sha }}' > body.md
-
-    - uses: ncipollo/release-action@v1
-      with:
-        owner: gdl-org
-        repo: builds
-        tag: ${{ env.DATE }}
-        bodyFile: body.md
-        artifacts: "executable-*/*"
-        allowUpdates: true
-        makeLatest: true
-        token: ${{ secrets.REPO_TOKEN }}
