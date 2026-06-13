@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.32.3 - 2026-06-13
+### Extractors
+- **bluesky**
+  - support gallery/carousel media ([`cb#168`](https://codeberg.org/mikf/gallery-dl/issues/168))
+- **civitai**
+  - update file URLs ([`gh#9421`](https://github.com/mikf/gallery-dl/issues/9421))
+- **exhentai**
+  - do not send empty `f_search` parameters ([`cb#158`](https://codeberg.org/mikf/gallery-dl/issues/158))
+- **facebook**
+  - improve `next_photo_id` extraction
+- **gofile**
+  - fix `401 Unauthorized` ([`cb#133`](https://codeberg.org/mikf/gallery-dl/issues/133) [`cb#176`](https://codeberg.org/mikf/gallery-dl/issues/176))
+- **instagram**
+  - fix `num` of audio files & covers ([`cb#175`](https://codeberg.org/mikf/gallery-dl/issues/175))
+- **kemono**
+  - download preview files, implement `original` option ([`cb#97`](https://codeberg.org/mikf/gallery-dl/issues/97) [`gh#9442`](https://github.com/mikf/gallery-dl/issues/9442))
+- **leakgallery**
+  - update file URL regex ([`cb#119`](https://codeberg.org/mikf/gallery-dl/issues/119))
+- **newgrounds**
+  - use non-WebP extensions for `imageData` images ([`cb#162`](https://codeberg.org/mikf/gallery-dl/issues/162))
+- **oauth**
+  - fix `oauth:deviantart` & `oauth:pixiv` ([`cb#106`](https://codeberg.org/mikf/gallery-dl/issues/106))
+- **patreon**
+  - support post URLs with creator name ([`cb#170`](https://codeberg.org/mikf/gallery-dl/issues/170))
+  - update `User-Agent` version ([`pr#172`](https://codeberg.org/mikf/gallery-dl/pulls/172))
+- **pixhost**
+  - update domain to `pixhost.cc`
+- **twitter**
+  - fix `KeyError: 'name'` for `"transform": false` ([`cb#109`](https://codeberg.org/mikf/gallery-dl/issues/109))
+- **vsco**
+  - provide 'site_id' & 'user_id' metadata when possible [`cb#145`](https://codeberg.org/mikf/gallery-dl/issues/145)
+  - support downloadng user galleries by site ID [`gh#7310`](https://github.com/mikf/gallery-dl/issues/7310)
+### Utilities
+- **requirements**
+  - update package versions
+- **text**
+  - restore `bytes` value usage in `build_query()` ([`cb#106`](https://codeberg.org/mikf/gallery-dl/issues/106))
+
 ## 1.32.2 - 2026-06-06
 ### Extractors
 - **Additions**
