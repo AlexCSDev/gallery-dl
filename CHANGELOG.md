@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.32.5 - 2026-06-30
+### Extractors
+- **Additions**
+  - [goonbox] add support ([`cb#218`](https://codeberg.org/mikf/gallery-dl/issues/218) [`gh#9615`](https://github.com/mikf/gallery-dl/issues/9615))
+- **aryion**
+  - fix folder detection ([`gh#9608`](https://github.com/mikf/gallery-dl/issues/9608))
+- **bilibili**
+  - extract `content`, `date`, `title`, and `topic` metadata ([`cb#200`](https://codeberg.org/mikf/gallery-dl/issues/200))
+- **dankefuerslesen**
+  - fix `400 Bad Request` errors ([`cb#219`](https://codeberg.org/mikf/gallery-dl/issues/219))
+- **facebook**
+  - handle video pages in sets ([`cb#208`](https://codeberg.org/mikf/gallery-dl/issues/208))
+  - improve `title` extraction
+- **fanbox**
+  - support skipping posts via `page` query parameter
+  - add `--post-range` skip
+- **filester**
+  - fix download URLs ([`cb#210`](https://codeberg.org/mikf/gallery-dl/issues/210))
+- **hentainexus**
+  - fix extraction ([`cb#202`](https://codeberg.org/mikf/gallery-dl/issues/202) [`cb#215`](https://codeberg.org/mikf/gallery-dl/issues/215))
+- **issuu**
+  - fix `JSONDecodeError` ([`cb#220`](https://codeberg.org/mikf/gallery-dl/issues/220))
+- **pawchive**
+  - show warning for missing files ([`gh#9605`](https://github.com/mikf/gallery-dl/issues/9605))
+- **skeb**
+  - prevent `KeyError: 'private'` ([`gh#9604`](https://github.com/mikf/gallery-dl/issues/9604))
+- **toyhouse**
+  - extract `detail` & `status` metadata ([`cb#209`](https://codeberg.org/mikf/gallery-dl/issues/209))
+  - fix `characters` metadata ([`cb#209`](https://codeberg.org/mikf/gallery-dl/issues/209))
+### Cookies
+  - fix `IndexError` for empty encrypted values ([`gh#9611`](https://github.com/mikf/gallery-dl/issues/9611))
+  - fix Firefox containers ([`cb#216`](https://codeberg.org/mikf/gallery-dl/issues/216))
+
 ## 1.32.4 - 2026-06-22
 ### Extractors
 - **Additions**
