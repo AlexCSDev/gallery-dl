@@ -119,6 +119,9 @@ def build_setuptools():
                 "truststore; python_version >= '3.10'",
                 "secretstorage; sys_platform == 'linux'",
             ],
+ 	        "curl_cffi": [
+	            "curl_cffi>=0.9.0",
+	        ],
         },
         entry_points={
             "console_scripts": [

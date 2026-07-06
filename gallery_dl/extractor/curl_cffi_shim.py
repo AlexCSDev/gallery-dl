@@ -7,13 +7,6 @@
 """curl_cffi.requests.Session wrapped with a requests.Session
 -compatible API for browser TLS fingerprint impersonation."""
 
-import threading
-import weakref as _weakref
-from concurrent.futures.thread import (
-    ThreadPoolExecutor,
-    _threads_queues,
-    _worker,
-)
 from http.client import responses as HTTP_STATUS_PHRASES
 import requests.exceptions
 
@@ -48,93 +41,10 @@ def _wrap_request(func, *args, **kwargs):
         raise
 
 
-class _DaemonThreadPoolExecutor(ThreadPoolExecutor):
-    # Workers block inside libcurl's perform loop and do not
-    # respond to shutdown sentinels. Spawning them as daemon
-    # threads excludes them from threading._shutdown's join.
-
-    def _adjust_thread_count(self):
-        if self._idle_semaphore.acquire(timeout=0):
-            return
-
-        def weakref_cb(_, q=self._work_queue):
-            q.put(None)
-
-        num_threads = len(self._threads)
-        if num_threads < self._max_workers:
-            thread_name = "%s_%d" % (
-                self._thread_name_prefix or self, num_threads)
-            # _worker signature changed in Python 3.14
-            if hasattr(self, "_create_worker_context"):
-                args = (
-                    _weakref.ref(self, weakref_cb),
-                    self._create_worker_context(),
-                    self._work_queue,
-                )
-            else:
-                args = (
-                    _weakref.ref(self, weakref_cb),
-                    self._work_queue,
-                    self._initializer,
-                    self._initargs,
-                )
-            t = threading.Thread(
-                name=thread_name, target=_worker, args=args,
-                daemon=True,
-            )
-            t.start()
-            self._threads.add(t)
-            _threads_queues[t] = self._work_queue
-
-
-def _replace_executor_with_daemon(session):
-    # curl_cffi.requests.Session.executor is a read-only property
-    # backed by self._executor; assigning _executor directly
-    # installs our daemon variant before streaming creates one.
-    try:
-        if not hasattr(session, "_executor"):
-            return
-        existing = getattr(session, "_executor", None)
-        session._executor = _DaemonThreadPoolExecutor()
-        if existing is not None:
-            existing.shutdown(wait=False)
-    except Exception:
-        pass
-
-
-def _detach_session_threads(session):
-    # concurrent.futures.thread._python_exit (registered via
-    # threading._register_atexit) iterates _threads_queues and
-    # calls t.join() on each worker; libcurl workers are blocked
-    # in C and never see the sentinel, so pop them instead.
-    try:
-        executor = getattr(session, "_executor", None)
-        if executor is None:
-            return
-        for t in list(getattr(executor, "_threads", ())):
-            _threads_queues.pop(t, None)
-    except Exception:
-        pass
-
-
-class _RawProxy():
-    __slots__ = ("_response",)
-
-    def __init__(self, response):
-        self._response = response
-
-    @property
-    def chunked(self):
-        te = self._response.headers.get(
-            "transfer-encoding", "")
-        return "chunked" in te.lower()
-
-
 class CurlCffiResponseWrapper():
 
     def __init__(self, response):
         self._response = response
-        self.raw = _RawProxy(response)
 
     def __getattr__(self, name):
         return getattr(self._response, name)
@@ -195,14 +105,6 @@ class CurlCffiSessionWrapper():
             if proxy:
                 self._session.proxies = proxy
             self._session.trust_env = trust_env
-
-        # Prevent interpreter shutdown from hanging on the
-        # libcurl-blocked worker threads: daemon executor makes
-        # _thread_shutdown skip them, atexit callback pops them
-        # from _threads_queues before _python_exit iterates.
-        _replace_executor_with_daemon(self._session)
-        threading._register_atexit(
-            _detach_session_threads, self._session)
 
         self.trust_env = trust_env
         self.headers = self._session.headers

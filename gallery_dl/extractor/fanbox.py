@@ -28,6 +28,10 @@ class FanboxExtractor(Extractor):
     _warning = True
 
     def _init_session(self):
+        # requests session for downloads; 'api.fanbox.cc' is the only host
+        # needing curl_cffi TLS impersonation (the 'api_session' below)
+        Extractor._init_session(self)
+
         try:
             from .curl_cffi_shim import CurlCffiSessionWrapper
         except ImportError:
@@ -46,7 +50,7 @@ class FanboxExtractor(Extractor):
         if proxy:
             proxy = util.build_proxy_map(proxy, self.log)
 
-        self.session = CurlCffiSessionWrapper(
+        self.api_session = CurlCffiSessionWrapper(
             impersonate=browser,
             proxy=proxy,
             trust_env=bool(self.config("proxy-env", True)),
@@ -54,7 +58,7 @@ class FanboxExtractor(Extractor):
 
         # curl_cffi's impersonate sets browser-matched headers;
         # only layer user overrides on top
-        headers = self.session.headers
+        headers = self.api_session.headers
 
         if referer := self.config("referer", self.referer):
             if isinstance(referer, str):
@@ -66,15 +70,21 @@ class FanboxExtractor(Extractor):
             if isinstance(custom_headers, dict):
                 headers.update(custom_headers)
 
+    def request(self, url, **kwargs):
+        # route API calls through the curl_cffi 'api_session' for CloudFlare
+        # TLS impersonation; file downloads keep using the requests session
+        kwargs.setdefault("session", self.api_session)
+        return Extractor.request(self, url, **kwargs)
+
     def _init(self):
+        # make the API session's cookie jar carry the same cookies as the
+        # download session ('cf_clearance' + 'FANBOXSESSID' for api.fanbox.cc)
+        for cookie in self.cookies:
+            self.api_session.cookies.set_cookie(cookie)
+
         self.headers = {
-            "Accept" : "application/json, text/plain, */*",
-            "Origin" : "https://www.fanbox.cc",
-            "Referer": "https://www.fanbox.cc/",
-            "Cookie" : None,
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-site",
+            "Accept": "application/json, text/plain, */*",
+            "Cookie": None,
         }
         self.embeds = self.config("embeds", True)
 
@@ -98,10 +108,14 @@ class FanboxExtractor(Extractor):
             FanboxExtractor._warning = False
 
     def items(self):
+        fee_min = self.config("fee-min")
         fee_max = self.config("fee-max")
 
         for item in self.posts():
-            if fee_max is not None and fee_max < item["feeRequired"]:
+            if fee_min is not None and fee_min > item["feeRequired"]:
+                self.log.warning("Skipping post %s (feeRequired of %s < %s)",
+                                 item["id"], item["feeRequired"], fee_min)
+            elif fee_max is not None and fee_max < item["feeRequired"]:
                 self.log.warning("Skipping post %s (feeRequired of %s > %s)",
                                  item["id"], item["feeRequired"], fee_max)
             else:
