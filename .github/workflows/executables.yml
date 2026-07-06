@@ -78,7 +78,7 @@ jobs:
 
     - name: Build executable
       run: |
-        pip install requests requests[socks] yt-dlp[default] pyyaml ${{ matrix.python-packages }} pyinstaller
+        pip install requests requests[socks] yt-dlp[default] pyyaml ${{ matrix.python-packages }} pyinstaller curl_cffi
         pip install truststore || true
         python ./scripts/pyinstaller.py --label '${{ env.LABEL }}'
 

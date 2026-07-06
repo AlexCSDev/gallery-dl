@@ -7,7 +7,7 @@
 """Extractors for https://www.fanbox.cc/"""
 
 from .common import Extractor, Message
-from .. import text, util
+from .. import text, util, exception
 
 BASE_PATTERN = r"(?:https?://)?(?:www\.)?fanbox\.cc"
 USER_PATTERN = (
@@ -26,6 +26,45 @@ class FanboxExtractor(Extractor):
     archive_fmt = "{id}_{num}"
     browser = "firefox"
     _warning = True
+
+    def _init_session(self):
+        try:
+            from .curl_cffi_shim import CurlCffiSessionWrapper
+        except ImportError:
+            raise exception.StopExtraction(
+                "curl_cffi is required for Fanbox. "
+                "Install it with: pip install gallery-dl[curl_cffi]"
+            )
+
+        browser = self.config("browser") or self.browser
+        if browser and isinstance(browser, str):
+            browser = browser.lower().partition(":")[0]
+        if browser not in ("firefox", "chrome"):
+            browser = "firefox"
+
+        proxy = self.config("proxy")
+        if proxy:
+            proxy = util.build_proxy_map(proxy, self.log)
+
+        self.session = CurlCffiSessionWrapper(
+            impersonate=browser,
+            proxy=proxy,
+            trust_env=bool(self.config("proxy-env", True)),
+        )
+
+        # curl_cffi's impersonate sets browser-matched headers;
+        # only layer user overrides on top
+        headers = self.session.headers
+
+        if referer := self.config("referer", self.referer):
+            if isinstance(referer, str):
+                headers["Referer"] = referer
+            elif self.root:
+                headers["Referer"] = self.root + "/"
+
+        if custom_headers := self.config("headers"):
+            if isinstance(custom_headers, dict):
+                headers.update(custom_headers)
 
     def _init(self):
         self.headers = {
