@@ -11,7 +11,7 @@ env:
 jobs:
   build:
 
-    if: github.repository == 'mikf/gallery-dl'
+    if: github.repository == 'AlexCSDev/gallery-dl'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
