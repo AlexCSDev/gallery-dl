@@ -108,7 +108,7 @@ class FanboxExtractor(Extractor):
                 try:
                     url = ("https://api.fanbox.cc/post.info?postId=" +
                            item["id"])
-                    item = self.request_json(url, headers=self.headers)["body"]
+                    item = self.request_json(url, headers=self.headers)["body"]["post"]
                 except Exception as exc:
                     self.log.warning("Skipping post %s (%s: %s)",
                                      item["id"], exc.__class__.__name__, exc)
